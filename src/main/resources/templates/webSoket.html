@@ -1,0 +1,98 @@
+
+<html xmlns:th="http://www.thymeleaf.org">
+<title>WebSocket Test</title>
+<script th:src="@{js\jquery-3.3.1.min.js}">
+</script>
+<script language="javascript"type="text/javascript">  
+   
+    var websocket = null;
+	var url = (window.location.protocol == "https:"
+        ? "wss://" : "ws://") + "localhost:8099"
+        + "/websocket";
+	
+	var width = 1367;
+  
+	function creatConn(){
+	    if('WebSocket' in window){
+	    	var name = $("#name").val();
+	    	if(name == '' || name == null){
+	    		return;
+	    	}else{
+	    		var param = "?name="+name;
+	        websocket = new WebSocket(url+param);
+	    	}
+	    }
+	    else{
+	        alert('Not support websocket')
+	    }
+	    
+	    //The callback method for the connection error
+	    websocket.onerror = function(){
+	        setMessageInnerHTML("error");
+	    };
+
+	    //The callback method for the connection open
+	    websocket.onopen = function(event){
+	        setMessageInnerHTMLConn("You have connected the Char Room !");
+	    }
+
+	    //The callback method for receiving message
+	    websocket.onmessage = function(event){
+	        setMessageInnerHTML(event.data);
+	    }
+
+	    //The callback method for the connection closure.
+	    websocket.onclose = function(){
+	        setMessageInnerHTMLConn("You have disconnected the Chat Room !");
+	    }
+
+	    //The monitoring window closes the event, and when the window is closed, 
+	    //active to close the websocket connection, prevent the connection from being disconnected and close the window, the server side will throw an exception.
+	    window.onbeforeunload = function(){
+	        websocket.close();
+	    }
+	}
+
+
+
+    function setMessageInnerHTMLConn(innerHTML){
+    	document.getElementById('message').innerHTML += innerHTML + '<br/>';
+    }
+    //show message 
+    function setMessageInnerHTML(innerHTML){
+ //       document.getElementById('message').innerHTML += innerHTML + '<br/>';
+        var maxHeight = $('#container').height() + 500;
+ //       var height = Math.random() * maxHeight;
+ 		var r = Math.random()*255;
+ 		var g = Math.random()*255;
+ 		var b = Math.random()*255; 
+		var pHtml = "<p style='display:inline-block;float:right;marginRight:-" + width + "px;color:rgb( " + r + "," + g + "," + b + ")' >" + innerHTML + "</p>";
+        $('#barrage').append(pHtml);
+         var last = $('#barrage').children().last();
+        last.animate({marginRight:width+100}, 8500 , 'linear' , function(){
+	    	 $(this).remove();
+   		 }); 
+        
+    }
+
+    //close connection
+    function closeWebSocket(){
+        websocket.close();
+    }
+
+    //send message
+    function send(){
+        var message = document.getElementById('text').value;
+        websocket.send(message);
+    }
+</script>  
+<div id='container' >
+<h2>Chat Room</h2>  
+<input id="name" type="text" /><button onclick="creatConn()">Login</button> 
+</br>
+<input id="text" type="text" /><button onclick="send()">Send</button>    <button onclick="closeWebSocket()">Close</button>
+<div id="message"></div>
+</div>
+<div id ='barrage' style='width:1300px;height:500px;'>
+</div>
+</html>
