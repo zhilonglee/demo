@@ -34,12 +34,10 @@ public class PersonServiceImpl implements PersonService {
         return repository.findAll();
     }
 
-
     public Page<Person> findAll(Pageable pageable) {
 
         return repository.findAll(pageable);
     }
-
 
     public Person findOne(Serializable id) {
 
@@ -58,42 +56,35 @@ public class PersonServiceImpl implements PersonService {
 
     }
 
-    @Override
     public List<Person> findByAddress(String address) {
 
         return repository.findByAddress(address);
 
     }
 
-    @Override
     public Person findByNameAndAddress(String name, String address) {
 
         return repository.findByNameAndAddress(name, address);
     }
 
-    @Override
     public Person withNameAndAddressQuery(String name, String address) {
 
         return repository.withNameAndAddressQuery(name, address);
 
     }
 
-
-    @Override
     @Transactional
     public int deleteByName(String name) {
 
         return repository.deleteByName(name);
     }
 
-    @Override
     @Transactional
     public int updateAgeByName(String name, Integer age) {
 
         return repository.updateAgeByName(name, age);
     }
 
-    @Override
     @Transactional
     public void update(Person person) throws Exception {
         if(person.getId() == null){
@@ -103,7 +94,6 @@ public class PersonServiceImpl implements PersonService {
 
     }
 
-    @Override
     public Page<Person> findAll(final Person person, Pageable pageable) throws Exception {
 
         if(person == null){
@@ -152,7 +142,6 @@ public class PersonServiceImpl implements PersonService {
         } ,pageable);
     }
 
-    @Override
     public Person findByName(String name) {
         return repository.findByName(name);
     }

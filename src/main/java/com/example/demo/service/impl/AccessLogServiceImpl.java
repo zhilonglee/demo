@@ -17,30 +17,25 @@ public class AccessLogServiceImpl implements AccessLogService {
 
 	@Autowired
 	public AccessLogRepository accessLogRepository;
-	
-	@Override
+
 	public List<AccessLog> findAll() {
 		return accessLogRepository.findAll();
 	}
 
-	@Override
 	public Page<AccessLog> findAll(Pageable pageable) {
 		return accessLogRepository.findAll(pageable);
 	}
 
-	@Override
 	public AccessLog findOne(Serializable id) {
 		return accessLogRepository.findById((Long) id).get();
 	}
 
-	@Override
 	@Transactional
 	public void save(AccessLog t) {
 		accessLogRepository.save(t);
 		
 	}
 
-	@Override
 	@Transactional
 	public void delete(AccessLog t) {
 		accessLogRepository.delete(t);

@@ -237,6 +237,19 @@ var WEBSOCKET = {
                 $("#current-date").html(WEBSOCKET.data.time);
             });
 
+            //with rabbitMQ
+            stompClient.subscribe('/topic/rabbitMQ', function (msg) {
+                WEBSOCKET.data.rows.push(JSON.parse(msg.body));
+                WEBSOCKET.data.connected = true;
+                $("#socket-content").html("");
+                $.each(WEBSOCKET.data.rows,function (i,e) {
+                    $("#socket-content").append("<tr>"+
+                        "<td>" + e.message + "</td>"+
+                        "<td>" + e.date + "</td>"
+                        +"</tr>")
+
+                })
+            });
             WEBSOCKET.data.connected = true;
             $("#connState").html("WebSocket connection has been established ! ");
         });

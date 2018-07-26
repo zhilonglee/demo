@@ -15,8 +15,7 @@ public class AccessEventListener implements ApplicationListener<AccessEvent> {
 	
 	@Autowired
 	AccessLogService accessLogService;
-	
-	@Override
+
 	public void onApplicationEvent(AccessEvent event) {
 		try {
 			AccessLog accesslog = new AccessLog();
