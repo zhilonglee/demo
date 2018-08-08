@@ -1,9 +1,10 @@
 package com.example.demo.web;
 
+import com.example.demo.entity.AccessLog;
 import com.example.demo.entity.Person;
-import com.example.demo.service.ExecutorService;
-import com.example.demo.service.PersonService;
-import com.example.demo.service.RabbitMqService;
+import com.example.demo.entity.Province;
+import com.example.demo.entity.Station;
+import com.example.demo.service.*;
 import com.example.demo.to.RabbitMessage;
 import com.example.demo.to.SocketMessage;
 import org.apache.commons.lang3.StringUtils;
@@ -17,14 +18,13 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Controller
 public class MainController {
@@ -39,14 +39,23 @@ public class MainController {
 
     private final PersonService personService;
 
+    private  final AccessLogService accessLogService;
+
+    private final ProvinceService provinceService;
+
+    @Autowired
+    private  StationService stationService;
+
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
-    public MainController(ExecutorService executorService, SimpMessagingTemplate messagingTemplate, RabbitMqService rabbitMqService, PersonService personService) {
+    public MainController(ExecutorService executorService, SimpMessagingTemplate messagingTemplate, RabbitMqService rabbitMqService, PersonService personService, AccessLogService accessLogService, ProvinceService provinceService) {
         this.executorService = executorService;
         this.messagingTemplate = messagingTemplate;
         this.rabbitMqService = rabbitMqService;
         this.personService = personService;
+        this.accessLogService = accessLogService;
+        this.provinceService = provinceService;
     }
 
     @RequestMapping("/")
@@ -63,6 +72,29 @@ public class MainController {
         //model.addAttribute("word", this.messageSource.getMessage("word", null, locale));
         logger.info("/index -- Controller");
         return "hello";
+    }
+
+    @RequestMapping("/footer")
+    public String footer() {
+        return "footer";
+    }
+
+    @RequestMapping("/railway")
+    public String railwayPage(final Model model){
+        List<String> labels = new ArrayList<>();
+        labels.add("Station Name : ");
+        labels.add("Station Code : ");
+        List<Station> stations = this.stationService.findAll();
+        List<Province> provinces = this.provinceService.findAll();
+        model.addAttribute("stations",stations);
+        model.addAttribute("provinces",provinces);
+        model.addAttribute("labels",labels);
+        return "railway";
+    }
+
+    @RequestMapping("/train")
+    public String trainPage(final Model model){
+        return "train";
     }
 
     @RequestMapping("/websocket")
@@ -122,5 +154,25 @@ public class MainController {
         RabbitMessage rabbitMessage = new RabbitMessage("Myexchange","hello",person);
         rabbitMqService.sendHelloMessage(rabbitMessage);
         return "Sent RabbitMQ Msg...";
+    }
+
+    @ResponseBody
+    @GetMapping("/rabbit/access/list")
+    public String sendRabbitMqBatchMsg(){
+
+        List<AccessLog> accessLogs = accessLogService.findAll();
+        for (AccessLog accessLog : accessLogs) {
+            RabbitMessage rabbitMessage = new RabbitMessage("MyTopicExchange","topicQueue",accessLog);
+            rabbitMqService.sendHelloMessage(rabbitMessage);
+        }
+        return "Sent RabbitMQ Msg...";
+    }
+
+    @ResponseBody
+    @GetMapping("/rabbit/access/one")
+    public String sendRabbitMqMsgGetOne(){
+
+        return  (String)rabbitTemplate.receiveAndConvert("topicQueue");
+
     }
 }

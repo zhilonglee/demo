@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title>Train Test Page</title>
+    <script th:src="@{js\jquery-3.3.1.min.js}"></script>
+    <script th:src="@{js\train.js}"></script>
+    <script th:src="@{js\railway.js}"></script>
+    <script>
+        function trainNameKeyup(){
+            TRAIN.countTrainHodometer($("#trainName").val());
+            $("#tipTitle").html();
+            if(TRAIN.hodometerCount == 0){
+                $("#tipTitle").html("还没有始发站！").css("color","red");
+            }else{
+                $("#tipTitle").html("已经有" + TRAIN.hodometerCount + "站").css("color","blue");
+            }
+        }
+        $(document).ready(function () {
+            TRAIN.InitSecurityAuth();
+            RAILWAY.InitSecurityAuth();
+            RAILWAY.getAllProvince("depprovince");
+            RAILWAY.getAllProvince("destprovince");
+
+
+            $("#depprovince").change(function () {
+                console.log($(this).val());
+                RAILWAY.getProvinceCitys("depstationName",$(this).val());
+            });
+
+            $("#destprovince").change(function () {
+                console.log($(this).val());
+                RAILWAY.getProvinceCitys("deststationName",$(this).val());
+            });
+
+        });
+    </script>
+</head>
+<body>
+<h3>Train Submit</h3>
+<table>
+    <tr>
+        <td><label>Train Name</label></td>
+        <td><input type="text" id="name"></td>
+    </tr>
+    <tr>
+        <td><label>Train Info</label></td>
+        <td><input type="text" id="info"></td>
+    </tr>
+    <tr>
+        <td><label>Train Type</label></td>
+        <td><input type="text" id="type"></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td><input type="submit" value="Submit" onclick="TRAIN.save()"></td>
+    </tr>
+</table>
+<hr/>
+<h3>Train Hodometer Submit</h3>
+<table>
+    <tr>
+        <td><label>Train Name</label></td>
+        <td><input type="text" id="trainName" onkeyup="trainNameKeyup()"></td>
+    </tr>
+    <tr>
+        <td><span id="tipTitle"></span></td>
+    </tr>
+    <tr>
+        <td><label>Cost Time</label></td>
+        <td><input type="text" id="time" pattern="^(20|21|22|23|[0-1]\d):[0-5]\d:[0-5]\d$"></td>
+    </tr>
+    <tr>
+        <td><label>Departure Province</label></td>
+        <td><select id="depprovince" >
+            <option>Please select one</option>
+        </select></td>
+    </tr>
+    <tr>
+        <td><label>Station Name</label></td>
+        <td><select id="depstationName" >
+            <option>Please select one</option>
+        </select></td>
+    </tr>
+    <tr>
+        <td><label>Destination Province</label></td>
+        <td><select id="destprovince" >
+            <option>Please select one</option>
+        </select></td>
+    </tr>
+    <tr>
+        <td><label>Station Name</label></td>
+        <td><select id="deststationName" >
+            <option>Please select one</option>
+        </select></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td><input type="submit" value="Submit" onclick="TRAIN.saveTrainHodometer('trainName','time','depstationName','deststationName')"></td>
+    </tr>
+</table>
+
+
+<div th:insert="~{footer :: footer}"></div>
+</body>
+</html>

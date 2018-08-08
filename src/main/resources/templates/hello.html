@@ -8,307 +8,46 @@
 </script>
 	<script th:src="@{js\stomp_2.3.3.js}"></script>
 	<script th:src="@{js\sockjs-client_1.1.4_sockjs.min.js}"></script>
-<script>
-var REGISTER={
-params:{
-base_url:"http://127.0.0.1:8099/",
-cur_url:"register",
-	csrf_token:"",
-	csrf_header:""
-},
-	InitSecurityAuth:function(){
-		var token = $("meta[name='_csrf']").attr("content");
-		var header = $("meta[name='_csrf_header']").attr("content");
-		console.log("token : " + token );
-		console.log("header : " + header);
-        REGISTER.params.csrf_token = token;
-        REGISTER.params.csrf_header = header;
-	},
-POST:function(){
-	console.log(REGISTER.params.base_url + REGISTER.params.cur_url);
-/*	
-	$.get(REGISTER.params.base_url + REGISTER.params.cur_url,function(data,status) {
-	console.log(status);
-			$("#animateTest").html(data.message);
-	},);
-*/	
-    $.ajax({
-	url: REGISTER.params.cur_url,
-	dataType:'jsonp',
-	jsonp: "jsonpCallback",
-	type : 'GET',
-	crossDomain: true,
-	beforeSend:function(xhr){
-        xhr.setRequestHeader(REGISTER.params.csrf_header,REGISTER.params.csrf_token);
-	console.log('Before send');
-	},
-	success:function(result){
-		$("#name").val(result.message);
-    },
-	error:function(xhr,status,error){
-	console.log("status : "+status+" error : "+error);
-	}
-	});
+<script th:src="@{js\hello.js}"></script>
+	<script>
+        $(document).ready(function() {
+            REGISTER.InitSecurityAuth();
+            REGISTER.POST();
+            var min = 80;
+            var medium = 100;
+            var max = 200;
+            var zoom = medium;
+            $("#zoom-in").click(function(){
+                if(zoom < max){
+                    zoom = zoom + 10;
+                    $("#newsContainer").css("font-size", zoom+"%");		/*announcement content*/
+                }
 
-
-},
-SavePerson:function(){
-	var suburl = 'v1/person/save';
-	var person ={};
-	person.name = $("#name").val();
-	person.age = $("#age").val();
-	person.address = $("#address").val();
-	person.sessionCSRF = $("csrf").val();
-	$.ajax({
-		url: suburl,
-		dataType:'json',
-		type:'POST',
-		contentType :'application/json;charset=UTF-8',
-		data:JSON.stringify(person),
-		beforeSend:function(xhr){
-		    xhr.setRequestHeader(REGISTER.params.csrf_header,REGISTER.params.csrf_token);
-            console.log(REGISTER.params.base_url + suburl);
-			console.log(JSON.stringify(person));
-		},
-		success:function(result){
-			console.log(result.message);
-	    },
-		error:function(xhr){
-		console.log("status : "+xhr.status);
-		}
-	});
-},
-deletePerson:function(){
-	var suburl = 'v1/person/delete'
-		var person ={};
-		person.name = $("#name2").val();
-		suburl = suburl + "/" + person.name;
-		$.ajax({
-			url: suburl,
-			dataType:'json',
-			type:'DELETE',
-			contentType :'application/json;charse=UTF-8',
-			data:JSON.stringify(person),
-			beforeSend:function(xhr){
-                xhr.setRequestHeader(REGISTER.params.csrf_header,REGISTER.params.csrf_token);
-				console.log(JSON.stringify(person));
-			},
-			success:function(result){
-				console.log(result.message);
-		    },
-			error:function(xhr){
-			console.log("status : "+xhr.status+" error : "+xhr.error);
-			}
-		});
-},
-updatePersonAge:function(){
-	var suburl = 'v1/person/patch'
-		var person ={};
-		person.age = $("#age3").val();
-		suburl =  suburl + "/" + $("#name3").val();
-		$.ajax({
-			url:suburl,
-			dataType:'json',
-			type:'PATCH',
-			contentType :'application/json;charset=UTF-8',
-			data:JSON.stringify(person),
-			beforeSend:function(xhr){
-                xhr.setRequestHeader(REGISTER.params.csrf_header,REGISTER.params.csrf_token);
-				console.log(JSON.stringify(person));
-			},
-			success:function(result){
-				console.log(result.message);
-		    },
-			error:function(xhr){
-			console.log("status : "+xhr.status+" error : "+xhr.error);
-			}
-		});
-},
-findAllByConditions:function(){
-	var suburl = 'v1/person/search';
-		var person ={};
-		person.age = $("#age4").val();
-		person.address = $("#address4").val();
-		person.name = $("#name4").val();
-		person.birthDay = $("#birthDay4").val();
-		$.ajax({
-			url: suburl,
-			dataType:'json',
-			type:'GET',
-			data:$("#form4").serialize(),
-			beforeSend:function(xhr){
-                xhr.setRequestHeader(REGISTER.params.csrf_header,REGISTER.params.csrf_token);
-				console.log($("#form4").serialize());
-				$("#searchContent").html("");
-			},
-			success:function(result){
-				$.each(result.data.content,function(){
-					if(this != 'undefined'){
-					$("#searchContent").append("<p>----------------------------</p>");
-					$("#searchContent").append("<p>Name : " + this.name + "</p>");
-					$("#searchContent").append("<p>Age : " + (this.age == null ? '': this.age) + "</p>");
-					$("#searchContent").append("<p>Address : " + (this.address == null ? '': this.address) + "</p>");
-					$("#searchContent").append("<p>Birth Day : " + (this.birthDay == null ? '': this.birthDay) + "</p>");
-					$("#searchContent").append("<p>UPDATE : </p><input type='button' value='update' onclick='REGISTER.updatePerson("+this.id+")' />");
-					}
-					
-				});
-		    },
-			error:function(xhr){
-			console.log("status : "+xhr.status+" error : "+xhr.error);
-			}
-		});
-},
-updatePerson:function(id){
-//	var suburl = 'v1/person/update/'+id;
-	$("#searchContent").html("");
-	
-	$("#searchContent").append("<p>----------update-------------</p>");
-	$("#searchContent").append("<p>Name :</p>"+"<input type='text' id='name5' name='name' />");
-	$("#searchContent").append("<p>Age :</p>"+"<input type='text' id='age5' name='age' />");
-	$("#searchContent").append("<p>Address :</p>"+"<input type='text' id='address5' name='address' />");
-	$("#searchContent").append("<p>Birth Day :</p>"+"<input type='text' id='birthDay5' name='birthDay' />");
-	$("#searchContent").append("<p>SUMBIT : </p><input type='button' value='submit'  onclick='REGISTER.submitUpdatePerson(" + id + ")' />");
-},
-submitUpdatePerson: function(id){
-	
-	var suburl = 'v1/person/update/' + id;
-	var person ={};
-	person.age = $("#age5").val();
-	person.address = $("#address5").val();
-	person.name = $("#name5").val();
-	person.birthDay = $("#birthDay5").val();
-	person.sessionCSRF = $("#csrf5").val();
-	$.ajax({
-		url:REGISTER.params.base_url + suburl,
-		dataType:'json',
-		type:'PUT',
-		data:person,
-		beforeSend:function(xhr){
-            xhr.setRequestHeader(REGISTER.params.csrf_header,REGISTER.params.csrf_token);
-			console.log(suburl);
-			console.log(person);
-		},
-		success:function(result){
-			console.log("Response message : " + result.message);
-	    },
-		error:function(xhr){
-		console.log("status : "+xhr.status+" error : "+xhr.error);
-		}
-	});
-}
-};
-var stompClient = null;
-var WEBSOCKET = {
-    data:{
-        //state
-        connected : false,
-            //message
-            message
-    :
-        '',
-            rows
-    :
-        []
-    },
-
-    //connection
-    connect : function () {
-        var socket = new SockJS('/endpoint');
-        stompClient = Stomp.over(socket);
-        stompClient.connect({}, function (frame) {
-            // register and send message
-            stompClient.subscribe('/topic/send', function (msg) {
-                WEBSOCKET.data.rows.push(JSON.parse(msg.body));
-                WEBSOCKET.data.connected = true;
-                $("#socket-content").html("");
-                $.each(WEBSOCKET.data.rows,function (i,e) {
-                    $("#socket-content").append("<tr>"+
-                        "<td>" + e.message + "</td>"+
-                        "<td>" + e.date + "</td>"
-                        +"</tr>")
-
-                })
-            });
-            // callback method to get published time
-            stompClient.subscribe('/topic/callback', function (r) {
-                WEBSOCKET.data.time = 'Current Server Time : ' + r.body;
-                WEBSOCKET.data.connected = true;
-                $("#current-date").html(WEBSOCKET.data.time);
             });
 
-            //with rabbitMQ
-            stompClient.subscribe('/topic/rabbitMQ', function (msg) {
-                WEBSOCKET.data.rows.push(JSON.parse(msg.body));
-                WEBSOCKET.data.connected = true;
-                $("#socket-content").html("");
-                $.each(WEBSOCKET.data.rows,function (i,e) {
-                    $("#socket-content").append("<tr>"+
-                        "<td>" + e.message + "</td>"+
-                        "<td>" + e.date + "</td>"
-                        +"</tr>")
-
-                })
+            $("#zoom-out").click(function(){
+                if(zoom > min){
+                    zoom = zoom - 10;
+                    $("#newsContainer").css("font-size", zoom+"%");		/*announcement content*/
+                }
             });
-            WEBSOCKET.data.connected = true;
-            $("#connState").html("WebSocket connection has been established ! ");
+
+            setInterval(function(){
+                //# $('ul :first').css('background', 'red');
+                $('ul').children().first().clone(true).appendTo('ul');
+                $('ul>:first').remove();
+            },1000);
+
+            $("#animateTest").animate({
+                left : '160px',
+                height :'110px',
+                width : '80px',
+                opacity : '0.5',
+            },10000);
+
+
         });
-    },
-
-    disconnect : function () {
-        if (stompClient != null) {
-            stompClient.disconnect();
-        }
-        WEBSOCKET.data.connected = false;
-        $("#connState").html("WebSocket connection has been closed ! ");
-    },
-
-    send : function () {
-        WEBSOCKET.data.message = $("#sendMessage").val();
-        stompClient.send("/send", {}, JSON.stringify({
-            'message': WEBSOCKET.data.message
-        }));
-    }
-};
-
-$(document).ready(function() {
-    REGISTER.InitSecurityAuth();
-	REGISTER.POST();
-	var min = 80;
-	var medium = 100;
-	var max = 200;
-	var zoom = medium;
-    $("#zoom-in").click(function(){
-        if(zoom < max){
-            zoom = zoom + 10;				
-			$("#newsContainer").css("font-size", zoom+"%");		/*announcement content*/				
-        }
-
-    });
-
-    $("#zoom-out").click(function(){
-        if(zoom > min){
-            zoom = zoom - 10;						
-			$("#newsContainer").css("font-size", zoom+"%");		/*announcement content*/				
-        }
-    });
-
- setInterval(function(){  
-        //# $('ul :first').css('background', 'red');  
-        $('ul').children().first().clone(true).appendTo('ul');  
-        $('ul>:first').remove();  
-    },1000);  
-
-	$("#animateTest").animate({
-	left : '160px',
-	height :'110px',
-	width : '80px',
-	opacity : '0.5',
-	},10000);
-
-	
-});
-</script>
+	</script>
 </head>
 <body>
                     <button type="button" id="zoom-out" class="btn btn-llgrey btn-custom5 pull-right">-A</button>
@@ -443,5 +182,6 @@ $(document).ready(function() {
 							</tbody>
 						</table>
 					</div>
+<div th:insert="~{footer :: footer}"></div>
 </body>
 </html>

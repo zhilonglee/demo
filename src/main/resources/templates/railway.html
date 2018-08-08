@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title>Railway Ticket Test Page</title>
+    <script th:src="@{js\jquery-3.3.1.min.js}"></script>
+    <script th:src="@{js\railway.js}"></script>
+    <script>
+        var tmp2;
+        var tmp3;
+        function changeVal(){
+            var tmp0 = $("#destinationProvince").val();
+            var tmp1 = $("#departureProvince").val()
+            $("#destinationProvince").val(tmp1);
+            $("#departureProvince").val(tmp0);
+            tmp2 = $("#departureCity").val();
+            tmp3 = $("#destinationCity").val();
+            RAILWAY.getProvinceCitys("departureCity",tmp0);
+            RAILWAY.getProvinceCitys("destinationCity",tmp1);
+            console.log("departureCity : "　+ tmp3);
+            console.log("destinationCity : "　+ tmp2);
+            setTimeout("changeCity()",500);
+        }
+        function changeCity(){
+            $("#departureCity").val(tmp3);
+            $("#destinationCity").val(tmp2);
+        }
+        $(document).ready(function () {
+            RAILWAY.InitSecurityAuth();
+            RAILWAY.getAllProvince("departureProvince");
+            RAILWAY.getAllProvince("destinationProvince");
+
+            $("#departureProvince").change(function () {
+                console.log($(this).val());
+                RAILWAY.getProvinceCitys("departureCity",$(this).val());
+            });
+
+            $("#destinationProvince").change(function () {
+                console.log($(this).val());
+                RAILWAY.getProvinceCitys("destinationCity",$(this).val());
+            });
+
+        });
+    </script>
+</head>
+<body>
+<h3>Station (Composite Primary Key) Submit</h3>
+<form th:method="POST" th:action="@{/v1/railway/station/save}" >
+<table>
+    <tr>
+        <td><label>Station id</label></td>
+        <td><select th:name = "compositeId.province.id"   >
+            <option th:each="province : ${provinces}" th:value="${province.id}" th:text="${province.name}"></option>
+        </select></td>
+    </tr>
+    <tr>
+        <td><label th:text="${labels.get(0)}">Station Name</label></td>
+        <td><input type="text" th:name="name"></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td><input type="submit" th:value="Submit"></td>
+    </tr>
+</table>
+</form>
+<hr/>
+<h3> Railway Province CRUD </h3>
+<form th:method="POST" th:action="@{/v1/railway/province/save}">
+<table>
+    <tr>
+        <td><label>Province Name:</label></td>
+        <td><input type="text" th:name="name"></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td><input type="submit" value="SUBMIT"></td>
+    </tr>
+</table>
+</form>
+<hr/>
+<h3> City List </h3>
+<table>
+    <tr th:each="station : ${stations}">
+        <td th:text="${station.compositeId.province.name}" />
+        <td th:text="${station.name}" />
+    </tr>
+</table>
+<hr/>
+<h3>Rail Stations Query</h3>
+<div>
+    <table>
+        <tr>
+            <td>Departure :</td>
+            <td>
+                <select id="departureProvince">
+                    <option>Please select a province</option>
+                </select>
+            </td>
+            <td>
+                <select id="departureCity">
+                    <option>Please select a city</option>
+                </select>
+            </td>
+            <td><br/></td>
+            <td><input type="button" value="⇋" onclick="changeVal();"/></td>
+            <td>Destination :</td>
+            <td>
+                <select id="destinationProvince">
+                    <option>Please select a province</option>
+                </select>
+            </td>
+            <td>
+                <select id="destinationCity">
+                    <option>Please select a city</option>
+                </select>
+            </td>
+            <td><input type="button" value="SEARCH" onclick="RAILWAY.findTrainByDepAndDest('departureCity','destinationCity','stationTable')"></td>
+        </tr>
+    </table>
+    <table id="stationTable"></table>
+</div>
+<hr/>
+<h3>Test Using Tag</h3>
+<label th:content="${#locale}" th:text="${#locale}"></label>
+<label th:text="${_csrf.token}"></label>
+<a href="product/list.html" th:href="@{/product/list}">Product List</a>
+
+<div th:insert="~{footer :: footer}"></div>
+</body>
+</html>
