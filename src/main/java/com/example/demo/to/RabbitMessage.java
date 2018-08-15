@@ -3,10 +3,7 @@ package com.example.demo.to;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -38,23 +35,31 @@ public class RabbitMessage implements Serializable {
         this.paramTypes.add(params[i].getClass());
     }
 
-    public byte[] getSerialBytes()
+    public static byte[] getSerialBytes(Serializable obj)
     {
         byte[] res=new byte[0];
         ByteArrayOutputStream baos=new ByteArrayOutputStream();
         ObjectOutputStream oos;
         try {
             oos = new ObjectOutputStream(baos);
-            oos.writeObject(this);
+            oos.writeObject(obj);
             oos.close();
-            res=baos.toByteArray();
+            res = baos.toByteArray();
         } catch (IOException e) {
             logger.error("",e);
         }
         return res;
     }
 
+    public static Object getObjectFromBytes(byte[] objBytes) throws Exception {
+        if (objBytes == null || objBytes.length == 0) {
+            return null;
+        }
+        ByteArrayInputStream bi = new ByteArrayInputStream(objBytes);
+        ObjectInputStream oi = new ObjectInputStream(bi);
 
+        return oi.readObject();
+    }
 
 
     public String getRouteKey() {

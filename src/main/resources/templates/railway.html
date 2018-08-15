@@ -119,7 +119,14 @@
             <td><input type="button" value="SEARCH" onclick="RAILWAY.findTrainByDepAndDest('departureCity','destinationCity','stationTable')"></td>
         </tr>
     </table>
-    <table id="stationTable"></table>
+    <table id="stationTable" border="1"></table>
+</div>
+<hr/>
+<div>
+    <input type="button" value="Query Ticket" onclick="RAILWAY.findTickets('ticketSearch')"/>
+    <table border="1" id="ticketSearch">
+
+    </table>
 </div>
 <hr/>
 <h3>Test Using Tag</h3>

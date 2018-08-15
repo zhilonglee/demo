@@ -50,7 +50,8 @@ public class HodometerServiceImpl implements HodometerService {
         List<Hodometer> hodometers = this.hodometerRepository.findHodometersByTrainNameAndInterStationPriStationNameOrDeputyStationName(trainName, departName, destName);
         TrainInfo trainInfo = new TrainInfo();
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss");
-        simpleDateFormat.setTimeZone(TimeZone.getTimeZone("GMT+08:00"));
+        //simpleDateFormat.setTimeZone(TimeZone.getTimeZone("GMT+08:00"));
+        simpleDateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
         for (Hodometer hodometer : hodometers) {
             InterStation interStation = hodometer.getInterStation();
             Station priStation = interStation.getPriStation();
@@ -58,13 +59,21 @@ public class HodometerServiceImpl implements HodometerService {
             Train train = hodometer.getTrain();
             if (priStation.getName().equals(departName)) {
                 trainInfo.setDepartStatinName(priStation.getName());
+                trainInfo.setDepartDate(hodometer.getCostTime());
                 trainInfo.setDepartStationdate(simpleDateFormat.format(hodometer.getCostTime()));
                 trainInfo.setTrainName(train.getName());
+                trainInfo.setDetail(train.getInfo());
+                trainInfo.setType(train.getType());
             }
             if(deputyStation.getName().equals(destName)){
                 trainInfo.setDestStationName(deputyStation.getName());
+                trainInfo.setDestDate(hodometer.getCostTime());
                 trainInfo.setDestStationdate(simpleDateFormat.format(hodometer.getCostTime()));
             }
+        }
+        if((trainInfo.getDestDate() != null || trainInfo.getDepartDate() != null) && trainInfo.getDepartDate().before(trainInfo.getDestDate())){
+            long costTime = trainInfo.getDepartDate().getTime() - trainInfo.getDestDate().getTime();
+            trainInfo.setCostTime(Math.abs(costTime));
         }
         return trainInfo;
     }

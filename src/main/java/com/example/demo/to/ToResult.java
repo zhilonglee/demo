@@ -7,7 +7,7 @@ public class ToResult {
 	
 	public final static String REQUESTOK = "Request successfully!";
 	public final static String BEDREQUEST = "Wrong request!";
-	
+	public final static String REQUESTREDIRECT = "Redirect.";
 	public final static String CONSTRAINTERROR = "constraint error!";
 	String message;
 	int  code;

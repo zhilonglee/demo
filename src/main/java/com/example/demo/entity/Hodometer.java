@@ -38,6 +38,12 @@ public class Hodometer implements Serializable {
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date costTime;
 
+    private Long premierClassAmount;
+
+    private Long firstClassAmount;
+
+    private Long secondClassAmount;
+
     public Long getId() {
         return id;
     }

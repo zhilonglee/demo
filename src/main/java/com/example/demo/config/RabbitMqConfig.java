@@ -1,6 +1,8 @@
 package com.example.demo.config;
 
 import org.springframework.amqp.core.*;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -10,6 +12,11 @@ public class RabbitMqConfig {
     private String queueName = "hello";
     private String queueName2 = "hello2";
     private String queneName3 = "topicQueue";
+
+    @Bean
+    public RabbitAdmin rabbitAdmin(ConnectionFactory connectionFactory){
+        return new RabbitAdmin(connectionFactory);
+    }
 
     @Bean
     public Queue queue(){

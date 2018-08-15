@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <meta th:content="${_csrf.token}" th:http-equiv="${_csrf.headerName}"/>
+    <title>Train Test Page</title>
+    <script th:src="@{js\jquery-3.3.1.min.js}"></script>
+</head>
+<body>
+<form method="post" th:action="@{/userlogin}">
+<table>
+    <tbody>
+    <tr>
+        <td>User Name : </td>
+        <td><input type="text" th:name="name"/></td>
+    </tr>
+    <tr>
+        <td>Password : </td>
+        <td><input type="password"/></td>
+    </tr>
+    <tr>
+        <td><input type="reset" value="Reset"/></td>
+        <td><input type="submit" value="Submit"/></td>
+    </tr>
+    </tbody>
+</table>
+</form>
+</body>
+</html>

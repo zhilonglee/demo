@@ -1,9 +1,6 @@
 package com.example.demo.web;
 
-import com.example.demo.entity.AccessLog;
-import com.example.demo.entity.Person;
-import com.example.demo.entity.Province;
-import com.example.demo.entity.Station;
+import com.example.demo.entity.*;
 import com.example.demo.service.*;
 import com.example.demo.to.RabbitMessage;
 import com.example.demo.to.SocketMessage;
@@ -20,6 +17,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -77,6 +75,22 @@ public class MainController {
     @RequestMapping("/footer")
     public String footer() {
         return "footer";
+    }
+
+    @RequestMapping(method = RequestMethod.GET, value = "/userlogin")
+    public String login() {
+        return "userlogin";
+    }
+
+    @RequestMapping(method = RequestMethod.POST, value = "/userlogin")
+    public String loginPost(@ModelAttribute("province")Person model, HttpServletRequest request) {
+        Person person = personService.findByName(model.getName());
+        if(person != null){
+            request.getSession().setAttribute("person",person);
+            return "redirect:/railway";
+        }else {
+            return "userlogin";
+        }
     }
 
     @RequestMapping("/railway")
@@ -152,7 +166,7 @@ public class MainController {
 
         Person person = personService.findOne(id);
         RabbitMessage rabbitMessage = new RabbitMessage("Myexchange","hello",person);
-        rabbitMqService.sendHelloMessage(rabbitMessage);
+        rabbitMqService.sendMessage(rabbitMessage);
         return "Sent RabbitMQ Msg...";
     }
 
@@ -163,7 +177,7 @@ public class MainController {
         List<AccessLog> accessLogs = accessLogService.findAll();
         for (AccessLog accessLog : accessLogs) {
             RabbitMessage rabbitMessage = new RabbitMessage("MyTopicExchange","topicQueue",accessLog);
-            rabbitMqService.sendHelloMessage(rabbitMessage);
+            rabbitMqService.sendMessage(rabbitMessage);
         }
         return "Sent RabbitMQ Msg...";
     }
@@ -175,4 +189,5 @@ public class MainController {
         return  (String)rabbitTemplate.receiveAndConvert("topicQueue");
 
     }
+
 }
