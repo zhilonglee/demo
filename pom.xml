@@ -24,6 +24,25 @@
         <java.version>1.8</java.version>
     </properties>
 
+<!--    <repositories>
+        <repository>
+            <id>spring-snapshots</id>
+            <url>http://repo.spring.io/libs-snapshot</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>spring-snapshots</id>
+            <url>http://repo.spring.io/libs-snapshot</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </pluginRepository>
+    </pluginRepositories>-->
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -72,6 +91,32 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-amqp</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>io.lettuce</groupId>
+                    <artifactId>lettuce-core</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>redis.clients</groupId>
+            <artifactId>jedis</artifactId>
+        </dependency>
+        <!-- Common -pool2 is required for spring2.0 to integrate redis-->
+        <!-- You must add that jedis depends on this -->
+        <!-- Spring boot 2.0 manual annotation you can go to see the address is:
+         https://docs.spring.io/spring-boot/docs/2.0.3.RELEASE/reference/htmlsingle /-->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-pool2</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-hateoas</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
@@ -79,8 +124,9 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+<!--                <version>1.5.15.RELEASE</version>-->
                 <configuration>
-                    <!-- 没有该配置，devtools 不生效 -->
+                    <!-- Without this configuration, devtools does not take effect -->
                     <fork>true</fork>
                     <addResources>true</addResources>
                 </configuration>

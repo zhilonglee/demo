@@ -8,12 +8,12 @@ import javax.servlet.http.HttpServletResponse;
 
 public class LoginIntercepter implements HandlerInterceptor {
    /**
-    * preHandle方法是进行处理器拦截用的，顾名思义，该方法将在Controller处理之前进行调用，
-    * SpringMVC中的Interceptor拦截器是链式的，可以同时存在多个Interceptor，
-    * 然后SpringMVC会根据声明的前后顺序一个接一个的执行，
-    * 而且所有的Interceptor中的preHandle方法都会在Controller方法调用之前调用。
-    * SpringMVC的这种Interceptor链式结构也是可以进行中断的，
-    * 这种中断方式是令preHandle的返回值为false，当preHandle的返回值为false的时候整个请求就结束了。
+    * The preHandle method is for handler interception, and as the name implies, it will be called before the Controller handles it,
+    * The Interceptor Interceptor in SpringMVC is chained and can have multiple interceptors,
+    * And then SpringMVC will execute one after another in the order that it's declared,
+    * And all the preHandle methods in the Interceptor are invoked before the Controller method is invoked.
+    * This Interceptor chain structure of SpringMVC can also be interrupted,
+    * This interrupts by making the return value of the preHandle false, and the entire request ends when the return value of the preHandle is false.
     */
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -21,14 +21,14 @@ public class LoginIntercepter implements HandlerInterceptor {
     }
 
     /**
-     * 这个方法只会在当前这个Interceptor的preHandle方法返回值为true的时候才会执行。
-     * postHandle是进行处理器拦截用的，它的执行时间是在处理器进行处理之 后， 也就是在Controller的方法调用之后执行，
-     * 但是它会在DispatcherServlet进行视图的渲染之前执行，也就是说在这个方法中你可以对ModelAndView进行操作。
-     * 这个方法的链式结构跟正常访问的方向是相反的，也就是说先声明的Interceptor拦截器该方法反而会后调用，
-     * 这跟Struts2里面的拦截器的执行过程有点像，
-     * 只是Struts2里面的intercept方法中要手动的调用ActionInvocation的invoke方法，
-     * Struts2中调用ActionInvocation的invoke方法就是调用下一个Interceptor或者是调用action，
-     * 然后要在Interceptor之前调用的内容都写在调用invoke之前，要在Interceptor之后调用的内容都写在调用invoke方法之后。
+     * This method will only execute if the current Interceptor's preHandle method returns true.
+     * PostHandle is used for processor interception. It is executed after processing by the processor, namely after the method call of the Controller.
+     * But it will be executed before the DispatcherServlet renders the view, which means that in this method you can manipulate the ModelAndView.
+     * The chained structure of this method goes in the opposite direction of normal access, that is, the Interceptor Interceptor that is declared first will be invoked later,
+     * That's like the inside of the struts 2 interceptor implementation process is a bit like,
+     * I'm just going to call the invoke method of ActionInvocation manually in the intercept method in Struts2,
+     * The invoke method of invoking ActionInvocation in Struts2 is to invoke the next Interceptor or the action,
+     * And then the content that you want to invoke before the Interceptor is written before you invoke the invoke, and the content that you want to invoke after the Interceptor is written after you invoke the invoke method.
      */
     @Override
     public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
@@ -36,8 +36,8 @@ public class LoginIntercepter implements HandlerInterceptor {
     }
 
    /**
-    * 该方法也是需要当前对应的Interceptor的preHandle方法的返回值为true时才会执行。
-    * 该方法将在整个请求完成之后，也就是DispatcherServlet渲染了视图执行， 这个方法的主要作用是用于清理资源的，
+    * This method is also executed only if the return value of the current corresponding Interceptor preHandle method is true.          
+    * This method will render the view execution after the entire request is completed, namely the DispatcherServlet, which is mainly used to clean up resources.
     */
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {

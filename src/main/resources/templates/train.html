@@ -13,9 +13,9 @@
             TRAIN.countTrainHodometer($("#trainName").val());
             $("#tipTitle").html();
             if(TRAIN.hodometerCount == 0){
-                $("#tipTitle").html("还没有始发站！").css("color","red");
+                $("#tipTitle").html("No starting station yet!").css("color","red");
             }else{
-                $("#tipTitle").html("已经有" + TRAIN.hodometerCount + "站").css("color","blue");
+                $("#tipTitle").html("Already have" + TRAIN.hodometerCount + "Station").css("color","blue");
             }
         }
         $(document).ready(function () {

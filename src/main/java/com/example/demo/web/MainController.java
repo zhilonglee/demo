@@ -4,6 +4,7 @@ import com.example.demo.entity.*;
 import com.example.demo.service.*;
 import com.example.demo.to.RabbitMessage;
 import com.example.demo.to.SocketMessage;
+import com.example.demo.utils.RedisUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,6 +48,9 @@ public class MainController {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
+    @Autowired
+    private RedisUtils redisUtils;
+
     public MainController(ExecutorService executorService, SimpMessagingTemplate messagingTemplate, RabbitMqService rabbitMqService, PersonService personService, AccessLogService accessLogService, ProvinceService provinceService) {
         this.executorService = executorService;
         this.messagingTemplate = messagingTemplate;
@@ -65,7 +69,7 @@ public class MainController {
     @RequestMapping("/hello")
     public String index(final Model model) {
 
-        model.addAttribute("name", "你好");
+        model.addAttribute("name", "helloworld");
         //final Locale locale = LocaleContextHolder.getLocale();
         //model.addAttribute("word", this.messageSource.getMessage("word", null, locale));
         logger.info("/index -- Controller");
@@ -98,8 +102,24 @@ public class MainController {
         List<String> labels = new ArrayList<>();
         labels.add("Station Name : ");
         labels.add("Station Code : ");
-        List<Station> stations = this.stationService.findAll();
-        List<Province> provinces = this.provinceService.findAll();
+        List<Station> stations = null;
+        List<Province> provinces = null;
+        stations = (List<Station>) redisUtils.getObj("Station:stationlist");
+        if (stations == null || stations.isEmpty()) {
+            stations = this.stationService.findAll();
+            if(null != stations && !stations.isEmpty()) {
+                redisUtils.setObj("Station:stationlist", stations);
+                redisUtils.expire("Station:stationlist", 30, RedisUtils.TIME_TO_MINUTES);
+            }
+        }
+        provinces = (List<Province>) redisUtils.getObj("Province:provincelist");
+        if (provinces == null || provinces.isEmpty()) {
+            provinces = this.provinceService.findAll();
+            if(null != provinces && !provinces.isEmpty()) {
+                redisUtils.setObj("Province:provincelist", provinces);
+                redisUtils.expire("Province:provincelist", 30, RedisUtils.TIME_TO_MINUTES);
+            }
+        }
         model.addAttribute("stations",stations);
         model.addAttribute("provinces",provinces);
         model.addAttribute("labels",labels);

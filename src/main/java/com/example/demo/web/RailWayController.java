@@ -5,6 +5,9 @@ import com.example.demo.entity.Station;
 import com.example.demo.service.InterSationService;
 import com.example.demo.service.ProvinceService;
 import com.example.demo.service.StationService;
+import com.example.demo.utils.RedisUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,6 +21,9 @@ public class RailWayController {
     private final ProvinceService provinceService;
 
     private final InterSationService interSationService;
+
+    @Autowired
+    private RedisUtils redisUtils;
 
     public RailWayController(StationService stationService, ProvinceService provinceService, InterSationService interSationService) {
         this.stationService = stationService;
@@ -65,7 +71,16 @@ public class RailWayController {
     @GetMapping(value = "/province/list")
     @ResponseBody
     public List<Province> findAllProvinces(){
-        return provinceService.findAll();
+        List<Province> provincelist = null;
+        provincelist = (List<Province>) redisUtils.getObj("Province:provincelist");
+        if (null == provincelist || provincelist.isEmpty()){
+            provincelist =  provinceService.findAll();
+/*            if(null != provincelist && !provincelist.isEmpty()){
+                redisUtils.setObj("Province:provincelist",provincelist);
+                redisUtils.expire("Province:provincelist",5,RedisUtils.TIME_TO_MINUTES);
+            }*/
+        }
+        return provincelist;
     }
 
     @GetMapping(value = "/station/{provinceName}")
