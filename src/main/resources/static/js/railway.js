@@ -95,7 +95,9 @@ var RAILWAY = {
                     '<td>Detail</td><td>Departure Station</td>' +
                     '<td>Departure Time</td>' +
                     '<td>Destination Station</td><td>Destination Time</td>' +
-                    '<td>Cost Time</td></tr>');
+                    '<td>Cost Time</td>' +
+                    '<td>Ticket Count</td>' +
+                    '</tr>');
                 $.each(data,function () {
                     var text = "RAILWAY.buyTicket(" + "\'" + this.trainName + "\',\'" +
                         this.departStatinName + "\',\'" + this.destStationName + "\',\'" +
@@ -109,6 +111,7 @@ var RAILWAY = {
                         "<td>"+this.destStationName+"</td>" +
                         "<td>"+this.destStationdate+"</td>" +
                         "<td>"+((this.costTime == null || this.costTime == '') ? '' : RAILWAY.convertLong2HMS(this.costTime))+"</td>" +
+                        "<td>"+this.ticketCount+"</td>" +
                         "<td>" + "<input type='button' value='Purchase' onclick=" + text + " />" + "</td>" +
                         "</tr>");
                 })

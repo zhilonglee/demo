@@ -18,6 +18,7 @@ public class TrainInfo {
     @JsonIgnore
     Date destDate;
     Long costTime;
+    Integer ticketCount;
 
     public String getDepartStatinName() {
         return departStatinName;
@@ -97,5 +98,13 @@ public class TrainInfo {
 
     public void setCostTime(Long costTime) {
         this.costTime = costTime;
+    }
+
+    public Integer getTicketCount() {
+        return ticketCount;
+    }
+
+    public void setTicketCount(Integer ticketCount) {
+        this.ticketCount = ticketCount;
     }
 }
