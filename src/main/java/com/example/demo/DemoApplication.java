@@ -8,7 +8,8 @@ import org.springframework.boot.web.servlet.support.SpringBootServletInitializer
 @SpringBootApplication
 public class DemoApplication {
 
-//test  for push   by hjb at 2018/09/13
+// test  for push   by hjb at 2018/09/13.
+// test for resolving confilc.
     public static void main(String[] args) {
         SpringApplication.run(DemoApplication.class, args);
     }
