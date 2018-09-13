@@ -7,11 +7,8 @@ import org.springframework.boot.web.servlet.support.SpringBootServletInitializer
 
 @SpringBootApplication
 public class DemoApplication {
-<<<<<<< HEAD
-	//test
-=======
-//test
->>>>>>> ce82b68d1357ade3be7dd3584fcfd4b0b7e5ea76
+
+//test  for push   by hjb at 2018/09/13
     public static void main(String[] args) {
         SpringApplication.run(DemoApplication.class, args);
     }
