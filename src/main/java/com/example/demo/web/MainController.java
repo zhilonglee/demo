@@ -104,14 +104,14 @@ public class MainController {
         labels.add("Station Code : ");
         List<Station> stations = null;
         List<Province> provinces = null;
-        stations = (List<Station>) redisUtils.getObj("Station:stationlist");
-        if (stations == null || stations.isEmpty()) {
+/*        stations = (List<Station>) redisUtils.getObj("Station:stationlist");
+        if (stations == null || stations.isEmpty()) {*/
             stations = this.stationService.findAll();
-            if(null != stations && !stations.isEmpty()) {
+/*            if(null != stations && !stations.isEmpty()) {
                 redisUtils.setObj("Station:stationlist", stations);
                 redisUtils.expire("Station:stationlist", 30, RedisUtils.TIME_TO_MINUTES);
             }
-        }
+        }*/
         provinces = (List<Province>) redisUtils.getObj("Province:provincelist");
         if (provinces == null || provinces.isEmpty()) {
             provinces = this.provinceService.findAll();
