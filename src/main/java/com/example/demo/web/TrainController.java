@@ -14,7 +14,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.annotation.SessionScope;
@@ -49,6 +51,9 @@ public class TrainController {
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
+
+    @Autowired
+    private RabbitAdmin rabbitAdmin;
 
     @Autowired
     private TicketService ticketService;
@@ -129,9 +134,27 @@ public class TrainController {
         List<TrainInfo> trainInfos = new ArrayList<TrainInfo>();
         for (String trainName : trainNames) {
             TrainInfo trainInfo = this.hodometerService.findHodometersByTrainNameAndInterStationPriStationNameOrDeputyStationName(trainName, departureName, destinationName);
+            trainInfo.setTicketCount(getRabbitMqQueueSize(trainName));
             trainInfos.add(trainInfo);
         }
         return trainInfos;
+    }
+
+    /**
+     *
+     * @param queueName
+     * @return
+     */
+    private Integer getRabbitMqQueueSize(String queueName) {
+        Integer queueMessageCount;
+        Properties queueProperties = rabbitAdmin.getQueueProperties(queueName);
+        if(queueProperties != null) {
+            queueMessageCount = (Integer) queueProperties.get("QUEUE_MESSAGE_COUNT");
+        }else{
+            queueMessageCount = 0;
+        }
+        logger.info("QUEUE_MESSAGE_COUNT : " + queueMessageCount);
+        return queueMessageCount;
     }
 
     @GetMapping("/hodometer/count/{trainName}")
@@ -156,7 +179,7 @@ public class TrainController {
     @PostMapping("/rabbit/train/{trainName}")
     public ToResult sendRabbitMqMsgGetOne(@PathVariable("trainName") String trainName,
                                           //@ModelAttribute("person") Person person,
-                                          @RequestBody Ticket basicTicket, final Channel channel){
+                                          @RequestBody Ticket basicTicket,Channel channel) {
         Person person = (Person)this.httpServletRequest.getSession().getAttribute("person");
         Person personInDb = null;
         if(person == null){
@@ -166,12 +189,14 @@ public class TrainController {
         }
         ToResult toResult = null;
         Ticket ticket = null;
-
+        Message message = null;
+        long deliveryTag = 0;
         //byte[] bytes = (byte[]) rabbitTemplate.receiveAndConvert(trainName);
         try {
             byte[] bytes = new byte[0];
             try {
-                Message message = rabbitTemplate.receive(trainName);
+                message = rabbitTemplate.receive(trainName);
+                deliveryTag = message.getMessageProperties().getDeliveryTag();
                 bytes = message.getBody();
             } catch (Exception e) {
                 throw new RabbitMqQueueNotFoundExeception(e);
@@ -216,7 +241,9 @@ public class TrainController {
                 calendar.add(Calendar.HOUR_OF_DAY,8);
                 ticket.setPurchaseDate(calendar.getTime());
                 this.ticketService.save(ticket);
-                //channel.basicAck(message.getMessageProperties().getDeliveryTag(),false);
+/*                // Manual confirmation - false only confirms the current message received, and true confirms all consumer received messages
+                channel.basicAck(deliveryTag,false);*/
+                logger.info("This mesaage has been consumed successfully!");
                 toResult = ToResult.buildToResult().addData(ticket);
             }
         } catch (RabbitMqQueueNotFoundExeception e){
@@ -225,11 +252,15 @@ public class TrainController {
         } catch (Exception e) {
             logger.error("",e);
             toResult = ToResult.buildBadRequestToResult().addDetail("Purchase failed.");
-/*            try {
-                channel.basicNack(message.getMessageProperties().getDeliveryTag(),false,true);
-            } catch (IOException e1) {
+/*            // nack return false re-queue:true
+            channel.basicNack(deliveryTag,false,true);*/
+            try {
+                RabbitMessage rabbitMessage = new RabbitMessage("train",ticket.getTrainName(),ticket);
+                //rabbitMqService.sendMessage(rabbitMessage);
+                rabbitMqService.sendMessageObj(rabbitMessage);
+            } catch (Exception e1) {
                 logger.error("",e1);
-            }*/
+            }
         }
 
         return toResult;
@@ -297,6 +328,16 @@ public class TrainController {
                 if(ticketById.getTicketStatus().equals(TicketStatus.REFUND)){
                     return toResult = ToResult.buildBadRequestToResult().addDetail("Refund Duplicate Ticket.");
                 }
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTime(ticketById.getCreationDay());
+                int year = calendar.get(Calendar.YEAR);
+                int month = calendar.get(Calendar.MONTH);
+                int day = calendar.get(Calendar.DAY_OF_MONTH);
+                calendar.setTime(new Date());
+                calendar.set(Calendar.YEAR,year);
+                calendar.set(Calendar.MONTH,month);
+                calendar.set(Calendar.DAY_OF_MONTH,day);
+                ticketById.setCreationDay(calendar.getTime());
                 ticketById.setTicketStatus(TicketStatus.REFUND);
                 this.ticketService.save(ticketById);
                 ticket = new Ticket(ticketById.getCarriageNo(),ticketById.getRow() ,ticketById.getColumn(),ticketById.getTrainName());
