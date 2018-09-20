@@ -7,7 +7,7 @@ import org.springframework.boot.web.servlet.support.SpringBootServletInitializer
 
 @SpringBootApplication
 public class DemoApplication {
-
+//add for testing by hjb at 2018/09/13  --for one more time.   22:00
 // test  for push   by hjb at 2018/09/13.
 // test for resolving confilc.
     public static void main(String[] args) {
