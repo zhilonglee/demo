@@ -6,19 +6,32 @@ import com.example.demo.to.RabbitMessage;
 import com.example.demo.to.SocketMessage;
 import com.example.demo.utils.RedisUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.FileCopyUtils;
+import org.springframework.util.FileSystemUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -42,6 +55,9 @@ public class MainController {
 
     private final ProvinceService provinceService;
 
+    @Value("${executor.file.path}")
+    private String uploadPath;
+
     @Autowired
     private  StationService stationService;
 
@@ -50,6 +66,9 @@ public class MainController {
 
     @Autowired
     private RedisUtils redisUtils;
+
+    @Autowired
+    private RestTemplate restTemplate;
 
     public MainController(ExecutorService executorService, SimpMessagingTemplate messagingTemplate, RabbitMqService rabbitMqService, PersonService personService, AccessLogService accessLogService, ProvinceService provinceService) {
         this.executorService = executorService;
@@ -208,6 +227,36 @@ public class MainController {
 
         return  (String)rabbitTemplate.receiveAndConvert("topicQueue");
 
+    }
+
+    @ResponseBody
+    @PostMapping("/upload")
+    public HttpEntity<Object> uploadFile(@RequestParam("file") MultipartFile file){
+        if (file.isEmpty()) {
+            return new ResponseEntity<>("File must be uploaded!" , HttpStatus.BAD_REQUEST);
+        }else {
+            String originalFilename = file.getOriginalFilename();
+            String suffix = originalFilename.substring(originalFilename.lastIndexOf("."));
+            String path = this.uploadPath + originalFilename;
+
+            try {
+                FileCopyUtils.copy(file.getInputStream(),new FileOutputStream(path));
+            } catch (Exception e) {
+                String message = ExceptionUtils.getMessage(e);
+                return new ResponseEntity<>(message , HttpStatus.BAD_REQUEST);
+            }
+        }
+        return new ResponseEntity<>("Upload Successfully!",HttpStatus.OK);
+    }
+
+    @ResponseBody
+    @GetMapping("/news")
+    public HttpEntity<String> callingNeteaseCacheJson(){
+        ResponseEntity<String> forEntity = restTemplate.getForEntity("http://pic.news.163.com/photocenter/api/list/0001/00AN0001,00AO0001,00AP0001/0/10/cacheMoreData.json", String.class);
+        String body = forEntity.getBody();
+        body = body.replace("cacheMoreData(", "");
+        body = StringUtils.removeEnd(body,")");
+        return new ResponseEntity<>(body,HttpStatus.OK);
     }
 
 }

@@ -2,6 +2,7 @@ var REGISTER={
     params:{
         base_url:"http://127.0.0.1:8099/",
         cur_url:"register",
+        upload_url:"upload",
         csrf_token:"",
         csrf_header:""
     },
@@ -169,7 +170,7 @@ var REGISTER={
         person.birthDay = $("#birthDay5").val();
         person.sessionCSRF = $("#csrf5").val();
         $.ajax({
-            url:REGISTER.params.base_url + suburl,
+            url:suburl,
             dataType:'json',
             type:'PUT',
             data:person,
@@ -180,6 +181,33 @@ var REGISTER={
             },
             success:function(result){
                 console.log("Response message : " + result.message);
+            },
+            error:function(xhr){
+                console.log("status : "+xhr.status+" error : "+xhr.error);
+            }
+        });
+    },
+    uploadFile : function () {
+        //var file = $("#file")[0].files;
+        //var file = document.getElementById("file");
+        //var file = document.getElementById('uploadForm')[0]
+        var formData = new FormData($('#uploadForm')[0]);
+        formData.append('tax_file', $('input[type=file]')[0].files[0]);
+        $.ajax({
+            url: REGISTER.params.upload_url,
+            type: 'POST',
+            cache: false,
+            //data: new FormData(file),
+            //data : new FormData(document.getElementById('uploadForm')[0]),
+            //data : file,
+            data : formData,
+            contentType: false, //using 'multipart/form-data' didn't work for me
+            processData: false, //this is also important when you are dealing with file
+            beforeSend:function(xhr){
+                xhr.setRequestHeader(REGISTER.params.csrf_header,REGISTER.params.csrf_token);
+            },
+            success:function(result){
+                console.log("Upload successfully!");
             },
             error:function(xhr){
                 console.log("status : "+xhr.status+" error : "+xhr.error);

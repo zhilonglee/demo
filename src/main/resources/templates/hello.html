@@ -1,7 +1,13 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<!--
+	If you are using JSON, then it is not possible to submit the CSRF token within an HTTP parameter.
+	Instead you can submit the token within a HTTP header.
+	A typical pattern would be to include the CSRF token within your meta tags.
+-->
 	<meta name="_csrf" th:content="${_csrf.token}"/>
+	<!-- default header name is X-CSRF-TOKEN -->
 	<meta name="_csrf_header" th:content="${_csrf.headerName}"/>
 <title>MyTest</title>
 <script th:src="@{js\jquery-3.3.1.min.js}">
@@ -85,7 +91,10 @@
 		<td><input id='address' type="text" name='address' /></td>
 		</tr>
 		<tr>
-		<td><input id="csrf" type="hidden" th:value="${_csrf.token}"> </td>
+<!--	If you are using Spring MVC <form:form> tag or Thymeleaf 2.1+ and are using @EnableWebSecurity,
+		the CsrfToken is automatically included for you (using the CsrfRequestDataValueProcessor).
+		other cases : <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>-->
+			<input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
 		<td>
 			<input type="button" value='submit' onclick='REGISTER.SavePerson()'/>
 		</td>
@@ -160,7 +169,6 @@
 <div id='searchContent'>
 
 </div>
-
 					<label>WebSocket connection state : </label>
 					<button type="button"  onclick="WEBSOCKET.connect()">Connect</button>
 					<button type="button" onclick="WEBSOCKET.disconnect()">Disconnect</button>
@@ -182,6 +190,11 @@
 							</tbody>
 						</table>
 					</div>
+					<hr>
+					<form id="uploadForm" enctype="multipart/form-data">
+						<input id="file" type="file" name="file"/>
+						<button id="upload" type="button" onclick="REGISTER.uploadFile()">upload</button>
+					</form>
 <div th:insert="~{footer :: footer}"></div>
 </body>
 </html>
