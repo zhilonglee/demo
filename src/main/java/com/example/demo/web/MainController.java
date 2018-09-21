@@ -5,9 +5,19 @@ import com.example.demo.service.*;
 import com.example.demo.to.RabbitMessage;
 import com.example.demo.to.SocketMessage;
 import com.example.demo.utils.RedisUtils;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import net.minidev.json.writer.ArraysMapper;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.tomcat.util.http.fileupload.FileUtils;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -32,7 +42,9 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -248,15 +260,73 @@ public class MainController {
         }
         return new ResponseEntity<>("Upload Successfully!",HttpStatus.OK);
     }
-
+   
     @ResponseBody
     @GetMapping("/news")
-    public HttpEntity<String> callingNeteaseCacheJson(){
+    //HttpEntity<String>
+    public String callingNeteaseCacheJson(Model model){
         ResponseEntity<String> forEntity = restTemplate.getForEntity("http://pic.news.163.com/photocenter/api/list/0001/00AN0001,00AO0001,00AP0001/0/10/cacheMoreData.json", String.class);
         String body = forEntity.getBody();
         body = body.replace("cacheMoreData(", "");
         body = StringUtils.removeEnd(body,")");
-        return new ResponseEntity<>(body,HttpStatus.OK);
+       
+        
+        ObjectMapper mapper = new ObjectMapper();
+        
+        List<News> newsList = null;
+		try {
+			newsList = mapper.readValue(body,new TypeReference<List<News>>() { });
+		} catch (JsonParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (JsonMappingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		model.addAttribute("newsList", newsList);
+        //return new ResponseEntity<>(body,HttpStatus.OK);
+        return "news";
     }
+    
+   /* public News jsonToNews(JSONObject jsonObject) {
+    	News news =new News();
+    	SimpleDateFormat format= new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+    	if(jsonObject==null) return null;
+    	try {
+			news.setDesc(jsonObject.getString("desc"));
+			news.setPvnum(jsonObject.getString("pvnum"));
+			Date createDate;
+			
+			createDate = format.parse(jsonObject.getString("createdate"));
+			
+			news.setCreateDate(createDate);
+			news.setScover(jsonObject.getString("scover"));
+			news.setSetname(jsonObject.getString("setname"));
+			news.setCover(jsonObject.getString("cover"));
+			news.setPics(null);
+			
+			news.setClientCover1(jsonObject.getString("clientcover1"));
+			news.setReplyNum(jsonObject.getString("replynum"));
+			news.setTopicName(jsonObject.getString("topicname"));
+			news.setSetId(Long.parseLong(jsonObject.getString("setid")));
+			news.setSetUrl(jsonObject.getString("seturl"));
+			Date dateTime=format.parse(jsonObject.getString("datetime"));
+			news.setDateTime(dateTime);
+			news.setClientCover(jsonObject.getString("clientcover"));
+			news.setImgsum(jsonObject.getString("imgsum"));
+			news.setTcover(jsonObject.getString("tcover"));
+			
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ParseException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+		}
+    	return news;
+    }*/
 
 }
