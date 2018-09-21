@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
@@ -250,7 +251,7 @@ public class MainController {
     }
 
     @ResponseBody
-    @GetMapping("/news")
+    @GetMapping(value ="/news",produces = {MediaType.APPLICATION_JSON_UTF8_VALUE})
     public HttpEntity<String> callingNeteaseCacheJson(){
         ResponseEntity<String> forEntity = restTemplate.getForEntity("http://pic.news.163.com/photocenter/api/list/0001/00AN0001,00AO0001,00AP0001/0/10/cacheMoreData.json", String.class);
         String body = forEntity.getBody();
