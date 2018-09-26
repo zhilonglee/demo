@@ -132,11 +132,16 @@ public class TrainController {
         }
         trainNames.addAll(trainsName);
         List<TrainInfo> trainInfos = new ArrayList<TrainInfo>();
-        for (String trainName : trainNames) {
+/*        for (String trainName : trainNames) {
             TrainInfo trainInfo = this.hodometerService.findHodometersByTrainNameAndInterStationPriStationNameOrDeputyStationName(trainName, departureName, destinationName);
             trainInfo.setTicketCount(getRabbitMqQueueSize(trainName));
             trainInfos.add(trainInfo);
-        }
+        }*/
+        trainNames.forEach(trainName -> {
+            TrainInfo trainInfo = this.hodometerService.findHodometersByTrainNameAndInterStationPriStationNameOrDeputyStationName(trainName, departureName, destinationName);
+            trainInfo.setTicketCount(getRabbitMqQueueSize(trainName));
+            trainInfos.add(trainInfo);
+        });
         return trainInfos;
     }
 
@@ -167,12 +172,15 @@ public class TrainController {
     public String sellTicketMsg(@PathVariable("trainName") String trainName){
         rabbitMqService.createQueueAndExchange(trainName,"train",trainName);
         List<Ticket> tickets = Ticket.createTickets(18l, 25l, 6l, trainName);
-        for (Ticket ticket : tickets) {
+/*        for (Ticket ticket : tickets) {
             RabbitMessage rabbitMessage = new RabbitMessage("train",trainName,ticket);
             //rabbitMqService.sendMessage(rabbitMessage);
             rabbitMqService.sendMessageObj(rabbitMessage);
-        }
-
+        }*/
+        tickets.forEach(ticket -> {
+            RabbitMessage rabbitMessage = new RabbitMessage("train",trainName,ticket);
+            rabbitMqService.sendMessageObj(rabbitMessage);
+        });
         return "Sent RabbitMQ Msg...";
     }
 

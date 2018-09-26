@@ -2,16 +2,17 @@ package com.example.demo.web;
 
 import com.example.demo.entity.*;
 import com.example.demo.service.*;
-import com.example.demo.to.RabbitMessage;
-import com.example.demo.to.SocketMessage;
+import com.example.demo.to.*;
+import com.example.demo.to.eum.ReqType;
 import com.example.demo.utils.RedisUtils;
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -22,10 +23,13 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.data.repository.query.Param;
+import org.springframework.http.*;
+import org.springframework.http.converter.StringHttpMessageConverter;
+
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -37,8 +41,8 @@ import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
-
 import javax.servlet.http.HttpServletRequest;
+
 
 
 
@@ -46,10 +50,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.DateFormat;
 
+
+import javax.servlet.http.HttpServletResponse;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.text.DateFormat;
+
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @Controller
 public class MainController {
@@ -82,6 +90,9 @@ public class MainController {
 
     @Autowired
     private RestTemplate restTemplate;
+
+    @Autowired
+    private EmailService emailService;
 
     public MainController(ExecutorService executorService, SimpMessagingTemplate messagingTemplate, RabbitMqService rabbitMqService, PersonService personService, AccessLogService accessLogService, ProvinceService provinceService) {
         this.executorService = executorService;
@@ -169,6 +180,12 @@ public class MainController {
         return "webSoket";
     }
 
+    @RequestMapping("/tulingchat")
+    public String tulingcat() {
+
+        return "tulingchat";
+    }
+
     @ResponseBody
     @RequestMapping(value = "/genfile/asyc")
     public String asycExecutor() {
@@ -227,10 +244,14 @@ public class MainController {
     public String sendRabbitMqBatchMsg(){
 
         List<AccessLog> accessLogs = accessLogService.findAll();
-        for (AccessLog accessLog : accessLogs) {
+/*        for (AccessLog accessLog : accessLogs) {
             RabbitMessage rabbitMessage = new RabbitMessage("MyTopicExchange","topicQueue",accessLog);
             rabbitMqService.sendMessage(rabbitMessage);
-        }
+        }*/
+        accessLogs.forEach(accessLog -> {
+            RabbitMessage rabbitMessage = new RabbitMessage("MyTopicExchange","topicQueue",accessLog);
+            rabbitMqService.sendMessage(rabbitMessage);
+        });
         return "Sent RabbitMQ Msg...";
     }
 
@@ -283,14 +304,11 @@ public class MainController {
 		try {
 			newsList = mapper.readValue(body,new TypeReference<List<News>>() { });
 		} catch (JsonParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		    logger.error("",e);
 		} catch (JsonMappingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+            logger.error("",e);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+            logger.error("",e);
 		}
 		//model.addAttribute("newsList", newsList);
         //return new ResponseEntity<>(newsList,HttpStatus.OK);
@@ -298,4 +316,103 @@ public class MainController {
     }
     
 
+    @ResponseBody
+    @GetMapping("/send/email")
+    public HttpEntity<Object> sendEmail(@Param(value="toEmail") String toEmail){
+        Map map = new HashMap<String,Object>();
+        map.put("name","hujiabin");
+        map.put("message","huajiabinshabi");
+        map.put("description","hujiabinzhendeshishabima?");
+        map.put("createdDate",new Date());
+        map.put("status","良好");
+        emailService.sendMessageMail("zhilong.li@ncs.com.sg",toEmail,"HELLO WORLD","mailTemplate",map);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+
+    @ResponseBody
+    @RequestMapping(value = "/git", method = RequestMethod.GET)
+    public String gitInformation() {
+        return readGitProperties();
+    }
+    private String readGitProperties() {
+        ClassLoader classLoader = getClass().getClassLoader();
+        InputStream inputStream = classLoader.getResourceAsStream("git.properties");
+        try {
+            return readFromInputStream(inputStream);
+        } catch (IOException e) {
+            logger.error("",e);
+            return "Version information could not be retrieved";
+        }
+    }
+    private String readFromInputStream(InputStream inputStream)
+            throws IOException {
+        StringBuilder resultStringBuilder = new StringBuilder();
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                resultStringBuilder.append(line).append("\n");
+            }
+        }
+        return resultStringBuilder.toString();
+    }
+
+    @ResponseBody
+    @GetMapping(value ="/tuling",produces = {MediaType.APPLICATION_JSON_UTF8_VALUE})
+    public HttpEntity<String> callingTulingRebot(@RequestParam(value = "text") String text){
+        TulingRequestTo tulingRequestTo = new TulingRequestTo();
+        tulingRequestTo.setReqType(ReqType.TEXT.ordinal());
+        Perception perception = new Perception();
+        Perception.InputText inputText = new Perception.InputText();
+        inputText.setText(text);
+        SelfInfo selfInfo = new SelfInfo();
+        SelfInfo.Location location = new SelfInfo.Location();
+        location.setCity("北京");
+        location.setProvince("北京");
+        selfInfo.setLocation(location);
+        Perception.InputImage inputImage = new Perception.InputImage();
+        Perception.InputMedia inputMedia = new Perception.InputMedia();
+        perception.setInputText(inputText);
+        perception.setInputMedia(inputMedia);
+        perception.setInputImage(inputImage);
+        perception.setSelfInfo(selfInfo);
+        tulingRequestTo.setPerception(perception);
+        UserInfo userInfo = new UserInfo();
+        userInfo.setUserId("chaochao");
+        tulingRequestTo.setUserInfo(userInfo);
+        ObjectMapper objectMapper = new ObjectMapper();
+        String object = "";
+        try {
+            object = objectMapper.writeValueAsString(tulingRequestTo);
+            logger.info("Tuling Request param : " + object);
+        } catch (JsonProcessingException e) {
+            logger.error("",e);
+        }
+
+/**
+ * Create a new instance of the {@link RestTemplate} using default settings.
+ * Default {@link HttpMessageConverter}s are initialized.
+
+	public RestTemplate() {
+            this.messageConverters.add(new ByteArrayHttpMessageConverter());
+            this.messageConverters.add(new StringHttpMessageConverter());
+            this.messageConverters.add(new ResourceHttpMessageConverter(false));
+            this.messageConverters.add(new SourceHttpMessageConverter<>());
+            this.messageConverters.add(new AllEncompassingFormHttpMessageConverter());
+ */
+    // StringHttpMessageConverter default charset is ISO-8859-1
+        /**
+         * A default constructor that uses {@code "ISO-8859-1"} as the default charset.
+         * @see #StringHttpMessageConverter(Charset)
+
+            public StringHttpMessageConverter() {
+                    this(DEFAULT_CHARSET);
+                }
+         */
+        restTemplate.getMessageConverters().set(1, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+
+        ResponseEntity<String> forEntity = restTemplate.postForEntity("http://openapi.tuling123.com/openapi/api/v2",object,String.class);
+        String body = forEntity.getBody();
+        return new ResponseEntity<>(body,HttpStatus.OK);
+    }
 }

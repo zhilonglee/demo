@@ -1,0 +1,50 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!--
+	If you are using JSON, then it is not possible to submit the CSRF token within an HTTP parameter.
+	Instead you can submit the token within a HTTP header.
+	A typical pattern would be to include the CSRF token within your meta tags.
+-->
+	<meta name="_csrf" th:content="${_csrf.token}"/>
+	<!-- default header name is X-CSRF-TOKEN -->
+	<meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+<title>Tuling Cat Rebot</title>
+    <link rel="stylesheet" th:href="@{css\tulingchat.css}" />
+	<script th:src="@{js\jquery-3.3.1.min.js}"></script>
+<script th:src="@{js\tuling.js}"></script>
+	<script>
+
+        function sendChatMessage(){
+            var talkwords = $("#talkwords").val();
+            $("#words").append('<div class="btalk"><span>' + talkwords +'</span></div>')
+            TULING.chat($("#talkwords").val());
+            $("#words").append('<div class="atalk"><span>' + TULING.content +'</span></div>')
+			$("#words").scrollTop($("#words")[0].scrollHeight);
+            $("#talkwords").val("");
+        }
+
+        $(document).ready(function() {
+            $("body").keydown(function(event) {
+                if (event.keyCode == "13") {//keyCode=13 is enter key
+                    $('#send').click();
+                }
+            });
+			TULING.InitSecurityAuth();
+        });
+	</script>
+</head>
+<body>
+<div class="talk_con">
+	<div class="talk_show" id="words">
+		<div class="atalk"><span id="asay">您好,我是小超.赶快和我聊天试试吧！</span></div>
+	</div>
+	<div class="talk_input">
+		<input type="text" class="talk_word" id="talkwords">
+		<input type="button" value="发送" class="talk_sub" onclick="sendChatMessage();" id="send">
+	</div>
+</div>
+
+<div th:insert="~{footer :: footer}"></div>
+</body>
+</html>
