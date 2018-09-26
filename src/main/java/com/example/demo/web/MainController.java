@@ -7,6 +7,7 @@ import com.example.demo.to.SocketMessage;
 import com.example.demo.utils.RedisUtils;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -24,7 +25,9 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
@@ -39,6 +42,8 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -261,18 +266,23 @@ public class MainController {
         return new ResponseEntity<>("Upload Successfully!",HttpStatus.OK);
     }
    
+    @GetMapping(value ="/news")
+    public String newsPage() {
+    	return "news";
+    }
+    
     @ResponseBody
-    @GetMapping("/news")
-    //HttpEntity<String>
-    public String callingNeteaseCacheJson(Model model){
+    @GetMapping(value ="/getNews",produces = {MediaType.APPLICATION_JSON_UTF8_VALUE})
+    public List<News> callingNeteaseCacheJson(HttpServletResponse response){
+    	
         ResponseEntity<String> forEntity = restTemplate.getForEntity("http://pic.news.163.com/photocenter/api/list/0001/00AN0001,00AO0001,00AP0001/0/10/cacheMoreData.json", String.class);
         String body = forEntity.getBody();
         body = body.replace("cacheMoreData(", "");
         body = StringUtils.removeEnd(body,")");
-       
         
         ObjectMapper mapper = new ObjectMapper();
-        
+        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+
         List<News> newsList = null;
 		try {
 			newsList = mapper.readValue(body,new TypeReference<List<News>>() { });
@@ -286,47 +296,10 @@ public class MainController {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		model.addAttribute("newsList", newsList);
-        //return new ResponseEntity<>(body,HttpStatus.OK);
-        return "news";
+		//model.addAttribute("newsList", newsList);
+        //return new ResponseEntity<>(newsList,HttpStatus.OK);
+        return newsList;
     }
     
-   /* public News jsonToNews(JSONObject jsonObject) {
-    	News news =new News();
-    	SimpleDateFormat format= new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-    	if(jsonObject==null) return null;
-    	try {
-			news.setDesc(jsonObject.getString("desc"));
-			news.setPvnum(jsonObject.getString("pvnum"));
-			Date createDate;
-			
-			createDate = format.parse(jsonObject.getString("createdate"));
-			
-			news.setCreateDate(createDate);
-			news.setScover(jsonObject.getString("scover"));
-			news.setSetname(jsonObject.getString("setname"));
-			news.setCover(jsonObject.getString("cover"));
-			news.setPics(null);
-			
-			news.setClientCover1(jsonObject.getString("clientcover1"));
-			news.setReplyNum(jsonObject.getString("replynum"));
-			news.setTopicName(jsonObject.getString("topicname"));
-			news.setSetId(Long.parseLong(jsonObject.getString("setid")));
-			news.setSetUrl(jsonObject.getString("seturl"));
-			Date dateTime=format.parse(jsonObject.getString("datetime"));
-			news.setDateTime(dateTime);
-			news.setClientCover(jsonObject.getString("clientcover"));
-			news.setImgsum(jsonObject.getString("imgsum"));
-			news.setTcover(jsonObject.getString("tcover"));
-			
-		} catch (JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ParseException e) {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
-		}
-    	return news;
-    }*/
 
 }
