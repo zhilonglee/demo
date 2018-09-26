@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+
+ <meta charset="UTF-8">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title>News Page</title>
+     <script th:src="@{js\jquery-3.3.1.min.js}"></script>
+	<script>
+	 $(document).ready(function () {
+		 $.ajax({
+			 url:"http://localhost:8099/getNews",
+			 type : "GET",
+			/*  beforeSend:function (xhr) {
+	                xhr.setRequestHeader("Access-Control-Allow-Origin","*");
+	         }, */
+			 success : function (data) {
+	                $.each(data,function () {
+	                	//console.log(this);
+	                	generateNews(this);
+	                    //$("#"+selectId).append("<option>"+this.name+"</option>");
+	                })
+	            },
+	            error : function (xhr, errormsg, error) {
+	                console.log("error msg : " + errormsg);
+	                console.log("xhr.status : " + xhr.status);
+	                console.log("xhr.statusText : " + xhr.statusText)
+	            },
+	            complete : function (xhr, ts) {
+	                console.log("xhr.readyState : " + xhr.readyState);
+	                console.log("xhr.status : " + xhr.status);
+	            }
+		 })
+	 });
+	 function generateNews(news){
+		 var newsDetail=
+		"<img src="+news.cover+" style='width:200px;height:200px'>"
+		 +"<div style='margin-left:250px;float:left;margin-top:-200px'>"
+		 + "<label style='font-size:25px'>"+news.setname+"</label></br>"
+		 +"<label>"+news.desc+"</label></br>"
+		 +"<label>"+news.createdate+"</label>"
+		 +"<a href='"+news.seturl+"'>&nbsp;详情</a>"
+		 +"</br>";
+		 
+		 $("#newsList").append("<li>"+newsDetail+"</li></br>");
+	 } 
+	</script>
+</head>
+<body>
+	Welcome to news page...
+	<ul id="newsList"></ul>
+</body>
+</html>

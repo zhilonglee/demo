@@ -5,17 +5,18 @@ import com.example.demo.service.*;
 import com.example.demo.to.*;
 import com.example.demo.to.eum.ReqType;
 import com.example.demo.utils.RedisUtils;
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.util.JSONWrappedObject;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Required;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.repository.query.Param;
 import org.springframework.http.*;
@@ -27,13 +28,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.FileCopyUtils;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
-
 import javax.servlet.http.HttpServletRequest;
-import javax.validation.constraints.NotNull;
+import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
@@ -263,16 +262,39 @@ public class MainController {
         }
         return new ResponseEntity<>("Upload Successfully!",HttpStatus.OK);
     }
-
+   
+    @GetMapping(value ="/news")
+    public String newsPage() {
+    	return "news";
+    }
+    
     @ResponseBody
-    @GetMapping(value ="/news",produces = {MediaType.APPLICATION_JSON_UTF8_VALUE})
-    public HttpEntity<String> callingNeteaseCacheJson(){
+    @GetMapping(value ="/getNews",produces = {MediaType.APPLICATION_JSON_UTF8_VALUE})
+    public List<News> callingNeteaseCacheJson(HttpServletResponse response){
+    	
         ResponseEntity<String> forEntity = restTemplate.getForEntity("http://pic.news.163.com/photocenter/api/list/0001/00AN0001,00AO0001,00AP0001/0/10/cacheMoreData.json", String.class);
         String body = forEntity.getBody();
         body = body.replace("cacheMoreData(", "");
         body = StringUtils.removeEnd(body,")");
-        return new ResponseEntity<>(body,HttpStatus.OK);
+        
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+
+        List<News> newsList = null;
+		try {
+			newsList = mapper.readValue(body,new TypeReference<List<News>>() { });
+		} catch (JsonParseException e) {
+		    logger.error("",e);
+		} catch (JsonMappingException e) {
+            logger.error("",e);
+		} catch (IOException e) {
+            logger.error("",e);
+		}
+		//model.addAttribute("newsList", newsList);
+        //return new ResponseEntity<>(newsList,HttpStatus.OK);
+        return newsList;
     }
+    
 
     @ResponseBody
     @GetMapping("/send/email")
