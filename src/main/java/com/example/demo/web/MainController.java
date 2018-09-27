@@ -283,13 +283,13 @@ public class MainController {
         return new ResponseEntity<>("Upload Successfully!",HttpStatus.OK);
     }
    
-    @GetMapping(value ="/news")
+    @RequestMapping(value ="/news")
     public String newsPage() {
     	return "news";
     }
     
     @ResponseBody
-    @GetMapping(value ="/getNews",produces = {MediaType.APPLICATION_JSON_UTF8_VALUE})
+    @GetMapping(value ="/newsList",produces = {MediaType.APPLICATION_JSON_UTF8_VALUE})
     public List<News> callingNeteaseCacheJson(){
     	
         ResponseEntity<String> forEntity = restTemplate.getForEntity("http://pic.news.163.com/photocenter/api/list/0001/00AN0001,00AO0001,00AP0001/0/10/cacheMoreData.json", String.class);
